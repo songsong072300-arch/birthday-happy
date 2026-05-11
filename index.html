@@ -78,6 +78,47 @@
     50% { transform: rotate(3deg); }
   }
 
+  /* ===== Gift Box ===== */
+  .gift-wrapper {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    text-align: center;
+    cursor: pointer;
+    transition: opacity 0.6s ease;
+  }
+  .gift-wrapper.fading {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .gift-box {
+    font-size: clamp(80px, 18vw, 140px);
+    display: block;
+    line-height: 1;
+    animation: gift-breathe 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 24px rgba(255, 182, 80, 0.7))
+            drop-shadow(0 0 48px rgba(255, 160, 60, 0.4))
+            drop-shadow(0 0 80px rgba(255, 140, 50, 0.25));
+    transition: transform 0.15s;
+  }
+  .gift-box:active { transform: scale(1.1); }
+  @keyframes gift-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .gift-hint {
+    font-size: clamp(14px, 2.5vw, 18px);
+    color: #E75480;
+    margin-top: 8px;
+    animation: blink-text 1.4s ease-in-out infinite;
+    font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+  @keyframes blink-text {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+  }
+
   /* ===== Card ===== */
   .card {
     position: absolute;
@@ -91,12 +132,18 @@
     padding: 40px 48px;
     text-align: center;
     box-shadow: 0 8px 40px rgba(255, 105, 180, 0.2), 0 2px 8px rgba(0,0,0,0.05);
-    animation: card-in 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     border: 2px solid rgba(255, 182, 193, 0.5);
+    display: none;
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 40px));
   }
-  @keyframes card-in {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7) rotate(-5deg); }
-    100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  .card.revealed {
+    display: block;
+    animation: card-reveal 1s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  }
+  @keyframes card-reveal {
+    0%   { opacity: 0; transform: translate(-50%, calc(-50% + 40px)); }
+    100% { opacity: 1; transform: translate(-50%, -50%); }
   }
   .card h1 {
     font-size: clamp(24px, 5vw, 42px);
@@ -123,16 +170,6 @@
     font-size: clamp(16px, 3vw, 22px);
     color: #C97586;
     margin-top: 4px;
-  }
-  .card .hint {
-    font-size: 13px;
-    color: #D4A0AE;
-    margin-top: 16px;
-    animation: hint-pulse 2s ease-in-out infinite;
-  }
-  @keyframes hint-pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
   }
 
   /* ===== Music Button ===== */
@@ -186,6 +223,12 @@
 <!-- Canvas for confetti -->
 <canvas id="confetti-canvas"></canvas>
 
+<!-- Gift Box -->
+<div class="gift-wrapper" id="giftWrapper">
+  <span class="gift-box">🎁</span>
+  <p class="gift-hint">点击拆开惊喜</p>
+</div>
+
 <!-- Music Button -->
 <button class="music-btn" id="musicBtn" aria-label="音乐开关">🎵</button>
 
@@ -194,7 +237,6 @@
   <h1>小任，生日快乐！</h1>
   <span class="cake-emoji" id="cake">🎂</span>
   <p class="signature">—— 小宋</p>
-  <p class="hint">👆 点一下试试？</p>
 </div>
 
 <script>
@@ -445,13 +487,39 @@
     }
   }
 
+  // ==================== Gift Box Handler ====================
+  let giftOpened = false;
+  document.getElementById('giftWrapper').addEventListener('click', function(e) {
+    if (giftOpened) return;
+    giftOpened = true;
+    e.stopPropagation();
+
+    // Fireworks at gift box center
+    const rect = this.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    spawnFireworks(cx, cy);
+    spawnConfetti(cx, cy, 50);
+
+    // Start music
+    startMusic();
+
+    // Fade out gift box
+    this.classList.add('fading');
+
+    // Reveal card after gift fades out (0.6s) + 0.5s delay
+    setTimeout(() => {
+      document.getElementById('card').classList.add('revealed');
+    }, 1100);
+  });
+
   // ==================== Event Handlers ====================
   document.getElementById('musicBtn').addEventListener('click', toggleMusic);
 
   document.addEventListener('click', function(e) {
     spawnConfetti(e.clientX, e.clientY, 25);
 
-    // Auto-start music on first interaction
+    // Auto-start music on first interaction (fallback if gift not clicked)
     if (!audioCtx) {
       startMusic();
     }
@@ -474,24 +542,11 @@
 
   // Touch events for mobile
   document.addEventListener('touchstart', function(e) {
-    if (e.target === document.getElementById('musicBtn') || e.target === document.getElementById('cake')) return;
+    if (e.target.closest('#musicBtn') || e.target.closest('#cake') || e.target.closest('#giftWrapper')) return;
     const touch = e.touches[0];
     spawnConfetti(touch.clientX, touch.clientY, 25);
     if (!audioCtx) startMusic();
   }, { passive: true });
-
-  // Fade out hint after first click
-  let hintHidden = false;
-  document.addEventListener('click', function hideHint() {
-    if (hintHidden) return;
-    hintHidden = true;
-    const hint = document.querySelector('.hint');
-    if (hint) {
-      hint.style.transition = 'opacity 0.6s';
-      hint.style.opacity = '0';
-      setTimeout(() => hint.remove(), 600);
-    }
-  }, { once: true });
 
 })();
 </script>
