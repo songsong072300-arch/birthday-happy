@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生日快乐 🎂</title>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: linear-gradient(135deg, #FFF0F5 0%, #FFE4E1 30%, #FFC0CB 60%, #FFB6C1 100%);
+    font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ===== Stars ===== */
+  .stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  }
+  .star {
+    position: absolute;
+    width: 4px; height: 4px;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle var(--dur) ease-in-out infinite;
+    animation-delay: var(--delay);
+    opacity: 0;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* ===== Balloons ===== */
+  .balloons { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+  .balloon {
+    position: absolute;
+    bottom: -200px;
+    width: 56px; height: 72px;
+    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+    animation: float-up var(--dur) var(--delay) ease-in infinite;
+    opacity: 0.85;
+  }
+  .balloon::before {
+    content: '';
+    position: absolute; bottom: -8px; left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 10px solid var(--color);
+  }
+  .balloon::after {
+    content: '';
+    position: absolute; top: 100%; left: 50%;
+    width: 1px; height: 50px;
+    background: rgba(150, 150, 150, 0.4);
+    transform-origin: top center;
+    transform: rotate(var(--sway, 0deg));
+    animation: sway 3s ease-in-out infinite;
+  }
+
+  @keyframes float-up {
+    0%   { transform: translateY(0) translateX(0) rotate(0deg); }
+    25%  { transform: translateY(-25vh) translateX(20px) rotate(3deg); }
+    50%  { transform: translateY(-50vh) translateX(-15px) rotate(-2deg); }
+    75%  { transform: translateY(-75vh) translateX(10px) rotate(2deg); }
+    100% { transform: translateY(-110vh) translateX(-5px) rotate(0deg); opacity: 0; }
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+  }
+
+  /* ===== Card ===== */
+  .card {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: 40px 48px;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(255, 105, 180, 0.2), 0 2px 8px rgba(0,0,0,0.05);
+    animation: card-in 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    border: 2px solid rgba(255, 182, 193, 0.5);
+  }
+  @keyframes card-in {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.7) rotate(-5deg); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  }
+  .card h1 {
+    font-size: clamp(24px, 5vw, 42px);
+    color: #E75480;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    text-shadow: 0 2px 4px rgba(255, 105, 180, 0.15);
+  }
+  .card .cake-emoji {
+    font-size: clamp(48px, 10vw, 80px);
+    display: block;
+    margin: 12px 0;
+    animation: bounce 1s ease-in-out infinite;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.15s;
+  }
+  .card .cake-emoji:active { transform: scale(1.15); }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .card .signature {
+    font-size: clamp(16px, 3vw, 22px);
+    color: #C97586;
+    margin-top: 4px;
+  }
+  .card .hint {
+    font-size: 13px;
+    color: #D4A0AE;
+    margin-top: 16px;
+    animation: hint-pulse 2s ease-in-out infinite;
+  }
+  @keyframes hint-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* ===== Music Button ===== */
+  .music-btn {
+    position: fixed;
+    top: 24px; right: 24px;
+    z-index: 10;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(255, 105, 180, 0.15);
+    transition: transform 0.2s, background 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .music-btn:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.9); }
+  .music-btn.playing {
+    animation: music-pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes music-pulse {
+    0%, 100% { box-shadow: 0 2px 12px rgba(255, 105, 180, 0.15); }
+    50% { box-shadow: 0 2px 24px rgba(255, 105, 180, 0.4); }
+  }
+
+  /* ===== Confetti Canvas ===== */
+  #confetti-canvas {
+    position: fixed; inset: 0; z-index: 5;
+    pointer-events: none;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 480px) {
+    .card { padding: 28px 24px; border-radius: 20px; }
+    .music-btn { width: 40px; height: 40px; font-size: 18px; top: 16px; right: 16px; }
+    .balloon { width: 40px; height: 52px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Balloons -->
+<div class="balloons" id="balloons"></div>
+
+<!-- Canvas for confetti -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Music Button -->
+<button class="music-btn" id="musicBtn" aria-label="音乐开关">🎵</button>
+
+<!-- Birthday Card -->
+<div class="card" id="card">
+  <h1>小任，生日快乐！</h1>
+  <span class="cake-emoji" id="cake">🎂</span>
+  <p class="signature">—— 小宋</p>
+  <p class="hint">👆 点一下试试？</p>
+</div>
+
+<script>
+(function() {
+  // ==================== Stars ====================
+  const starsContainer = document.getElementById('stars');
+  for (let i = 0; i < 60; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 60 + '%';
+    star.style.setProperty('--dur', (2 + Math.random() * 3) + 's');
+    star.style.setProperty('--delay', Math.random() * 4 + 's');
+    star.style.width = (2 + Math.random() * 4) + 'px';
+    star.style.height = star.style.width;
+    starsContainer.appendChild(star);
+  }
+
+  // ==================== Balloons ====================
+  const balloonColors = [
+    '#FF6B8A', '#FF8FAB', '#FFB3C6', '#FFC2D1',
+    '#FF9AA2', '#FFB7B2', '#FFDAC1', '#E8B4C8',
+    '#F4A9C5', '#FFABC2', '#FFD1DC', '#FEC8D8'
+  ];
+  const balloonsContainer = document.getElementById('balloons');
+  for (let i = 0; i < 14; i++) {
+    const balloon = document.createElement('div');
+    balloon.className = 'balloon';
+    const color = balloonColors[i % balloonColors.length];
+    balloon.style.left = (5 + (i * 7) % 90) + '%';
+    balloon.style.setProperty('--dur', (8 + Math.random() * 10) + 's');
+    balloon.style.setProperty('--delay', (Math.random() * 12) + 's');
+    balloon.style.setProperty('--color', color);
+    balloon.style.setProperty('--sway', (Math.random() * 6 - 3) + 'deg');
+    balloon.style.background = `radial-gradient(circle at 35% 30%, ${color}, ${color}dd 60%, ${color}aa)`;
+    balloon.style.boxShadow = `inset -8px -8px 16px rgba(0,0,0,0.06), inset 4px 4px 12px rgba(255,255,255,0.5)`;
+    balloonsContainer.appendChild(balloon);
+  }
+
+  // ==================== Canvas Setup ====================
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // ==================== Particle System ====================
+  const shapes = ['rect', 'circle', 'heart'];
+  const confettiColors = [
+    '#FF6B8A', '#FF8FAB', '#FFB3C6', '#FFD700',
+    '#FF85A2', '#FFC0CB', '#FFE4E1', '#FFA07A',
+    '#FFB6C1', '#DB7093', '#FF69B4', '#FF1493',
+    '#FFDAB9', '#FFF0F5', '#E6E6FA', '#FFC2D1'
+  ];
+
+  function randomColor() { return confettiColors[Math.floor(Math.random() * confettiColors.length)]; }
+
+  function spawnConfetti(x, y, count) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 6;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed * (0.5 + Math.random()),
+        vy: Math.sin(angle) * speed * (0.5 + Math.random()) - 3,
+        size: 4 + Math.random() * 8,
+        color: randomColor(),
+        shape: shapes[Math.floor(Math.random() * shapes.length)],
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 0.2,
+        life: 1,
+        decay: 0.005 + Math.random() * 0.015,
+        gravity: 0.08 + Math.random() * 0.06
+      });
+    }
+    // Cap particles
+    if (particles.length > 500) particles.splice(0, particles.length - 500);
+  }
+
+  function spawnFireworks(x, y) {
+    const bursts = 5 + Math.floor(Math.random() * 4);
+    for (let b = 0; b < bursts; b++) {
+      const baseAngle = (b / bursts) * Math.PI * 2 + Math.random() * 0.3;
+      const burstSpeed = 4 + Math.random() * 5;
+      const color = randomColor();
+      for (let i = 0; i < 20; i++) {
+        const angle = baseAngle + (Math.random() - 0.5) * 0.8;
+        const speed = burstSpeed * (0.6 + Math.random() * 0.4);
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: 3 + Math.random() * 5,
+          color,
+          shape: 'circle',
+          rotation: 0,
+          rotationSpeed: 0,
+          life: 1,
+          decay: 0.01 + Math.random() * 0.02,
+          gravity: 0.05,
+          trail: true
+        });
+      }
+    }
+    if (particles.length > 500) particles.splice(0, particles.length - 500);
+  }
+
+  function drawHeart(ctx, x, y, size) {
+    ctx.save();
+    ctx.translate(x, y);
+    const s = size * 0.6;
+    ctx.beginPath();
+    ctx.moveTo(0, s * 0.3);
+    ctx.bezierCurveTo(0, -s * 0.1, -s, -s * 0.1, -s, s * 0.3);
+    ctx.bezierCurveTo(-s, s * 0.9, 0, s * 1.3, 0, s * 1.3);
+    ctx.bezierCurveTo(0, s * 1.3, s, s * 0.9, s, s * 0.3);
+    ctx.bezierCurveTo(s, -s * 0.1, 0, -s * 0.1, 0, s * 0.3);
+    ctx.closePath();
+    ctx.restore();
+  }
+
+  function drawParticle(p) {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rotation);
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+
+    if (p.shape === 'rect') {
+      ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+    } else if (p.shape === 'circle') {
+      ctx.beginPath();
+      ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (p.shape === 'heart') {
+      drawHeart(ctx, 0, 0, p.size);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      p.rotation += p.rotationSpeed;
+      p.vx *= 0.995;
+      p.life -= p.decay;
+
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      } else {
+        drawParticle(p);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // ==================== Audio: Happy Birthday Melody ====================
+  let audioCtx = null;
+  let isPlaying = false;
+  let melodyTimeout = null;
+
+  const notes = {
+    'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23,
+    'G4': 392.00, 'A4': 440.00, 'B4': 493.88, 'C5': 523.25,
+    'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99
+  };
+
+  // Happy Birthday melody: [note, duration_in_beats]
+  const melody = [
+    ['G4', 0.75], ['G4', 0.75], ['A4', 1.5], ['G4', 1.5], ['C5', 1.5], ['B4', 3],
+    ['G4', 0.75], ['G4', 0.75], ['A4', 1.5], ['G4', 1.5], ['D5', 1.5], ['C5', 3],
+    ['G4', 0.75], ['G4', 0.75], ['G5', 1.5], ['E5', 1.5], ['C5', 1.5], ['B4', 1.5], ['A4', 3],
+    ['F5', 0.75], ['F5', 0.75], ['E5', 1.5], ['C5', 1.5], ['D5', 1.5], ['C5', 4]
+  ];
+
+  function playNote(note, startTime, duration) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(notes[note], startTime);
+
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.25, startTime + 0.05);
+    gain.gain.setValueAtTime(0.25, startTime + duration * 0.7);
+    gain.gain.linearRampToValueAtTime(0, startTime + duration);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.05);
+  }
+
+  function playMelody() {
+    if (!audioCtx) return;
+    const bpm = 100;
+    const beatDuration = 60 / bpm;
+    let currentTime = audioCtx.currentTime + 0.1;
+
+    melody.forEach(([note, beats]) => {
+      playNote(note, currentTime, beats * beatDuration * 0.9);
+      currentTime += beats * beatDuration;
+    });
+
+    // Schedule loop
+    const totalDuration = currentTime - audioCtx.currentTime + 2;
+    melodyTimeout = setTimeout(() => {
+      if (isPlaying) playMelody();
+    }, totalDuration * 1000);
+  }
+
+  function startMusic() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    isPlaying = true;
+    document.getElementById('musicBtn').classList.add('playing');
+    document.getElementById('musicBtn').textContent = '🎶';
+    playMelody();
+  }
+
+  function stopMusic() {
+    isPlaying = false;
+    if (melodyTimeout) clearTimeout(melodyTimeout);
+    document.getElementById('musicBtn').classList.remove('playing');
+    document.getElementById('musicBtn').textContent = '🎵';
+  }
+
+  function toggleMusic(e) {
+    e.stopPropagation();
+    if (isPlaying) {
+      stopMusic();
+    } else {
+      startMusic();
+    }
+  }
+
+  // ==================== Event Handlers ====================
+  document.getElementById('musicBtn').addEventListener('click', toggleMusic);
+
+  document.addEventListener('click', function(e) {
+    spawnConfetti(e.clientX, e.clientY, 25);
+
+    // Auto-start music on first interaction
+    if (!audioCtx) {
+      startMusic();
+    }
+  });
+
+  // Cake click: fireworks + extra confetti
+  document.getElementById('cake').addEventListener('click', function(e) {
+    e.stopPropagation();
+    const rect = this.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    spawnFireworks(cx, cy);
+    spawnConfetti(cx, cy, 40);
+
+    // Extra burst after short delay
+    setTimeout(() => {
+      spawnConfetti(cx + (Math.random() - 0.5) * 80, cy + (Math.random() - 0.5) * 40, 20);
+    }, 300);
+  });
+
+  // Touch events for mobile
+  document.addEventListener('touchstart', function(e) {
+    if (e.target === document.getElementById('musicBtn') || e.target === document.getElementById('cake')) return;
+    const touch = e.touches[0];
+    spawnConfetti(touch.clientX, touch.clientY, 25);
+    if (!audioCtx) startMusic();
+  }, { passive: true });
+
+  // Fade out hint after first click
+  let hintHidden = false;
+  document.addEventListener('click', function hideHint() {
+    if (hintHidden) return;
+    hintHidden = true;
+    const hint = document.querySelector('.hint');
+    if (hint) {
+      hint.style.transition = 'opacity 0.6s';
+      hint.style.opacity = '0';
+      setTimeout(() => hint.remove(), 600);
+    }
+  }, { once: true });
+
+})();
+</script>
+</body>
+</html>
