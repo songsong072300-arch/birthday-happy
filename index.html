@@ -12,11 +12,18 @@
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: linear-gradient(135deg, #FFF0F5 0%, #FFE4E1 30%, #FFC0CB 60%, #FFB6C1 100%);
+    background: linear-gradient(135deg, #FFF0F5, #FFE4E1, #FFC0CB, #FFB6C1, #FFD1DC, #FFF0F5);
+    background-size: 400% 400%;
+    animation: bg-shift 18s ease infinite;
     font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+  }
+  @keyframes bg-shift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   /* ===== Stars ===== */
@@ -35,6 +42,24 @@
   @keyframes twinkle {
     0%, 100% { opacity: 0; transform: scale(0.5); }
     50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* ===== Floating Decorations ===== */
+  .float-decor {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  }
+  .float-heart, .float-sparkle {
+    position: absolute;
+    animation: float-around var(--dur) var(--delay) ease-in-out infinite;
+    opacity: 0;
+    font-size: var(--size);
+  }
+  @keyframes float-around {
+    0%   { transform: translateY(105vh) translateX(0) rotate(0deg) scale(0.5); opacity: 0; }
+    10%  { opacity: 0.7; }
+    50%  { opacity: 0.5; }
+    90%  { opacity: 0.6; }
+    100% { transform: translateY(-10vh) translateX(var(--drift)) rotate(var(--spin)) scale(0.8); opacity: 0; }
   }
 
   /* ===== Balloons ===== */
@@ -244,18 +269,26 @@
   }
   .secret-letter {
     position: relative;
-    max-width: 520px;
-    width: 90%;
-    max-height: 80vh;
+    max-width: 540px;
+    width: 92%;
+    max-height: 82vh;
     overflow-y: auto;
-    background: #FDF8F0;
+    background:
+      repeating-linear-gradient(
+        0deg, transparent, transparent 4px,
+        rgba(180, 160, 140, 0.04) 4px, rgba(180, 160, 140, 0.04) 5px
+      ),
+      linear-gradient(180deg, #FEFAF4 0%, #FCF5EA 40%, #FDF7F0 100%);
     color: #4A3F3A;
-    border-radius: 12px;
-    padding: 36px 32px 32px;
+    border-radius: 14px;
+    padding: 44px 34px 34px;
     box-shadow:
-      0 4px 6px rgba(0,0,0,0.07),
-      0 12px 40px rgba(0,0,0,0.18),
-      inset 0 0 0 1px rgba(255,255,255,0.6);
+      0 2px 4px rgba(0,0,0,0.04),
+      0 8px 24px rgba(0,0,0,0.10),
+      0 20px 50px rgba(0,0,0,0.16),
+      inset 0 0 0 1px rgba(255,255,255,0.7),
+      inset 0 0 80px rgba(255,240,220,0.4);
+    border: 1px solid rgba(200, 180, 160, 0.35);
     font-family: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
     font-size: clamp(15px, 2.2vw, 17px);
     line-height: 2;
@@ -264,16 +297,38 @@
     transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1),
                 opacity 0.55s ease;
   }
+  .secret-letter::before {
+    content: '💌';
+    position: sticky;
+    top: -10px;
+    display: block;
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 2px 4px rgba(200, 160, 140, 0.4));
+    z-index: 1;
+  }
   .secret-letter.revealed {
     transform: translateY(0);
     opacity: 1;
   }
   .secret-letter p {
     margin: 0 0 2px;
+    position: relative;
+  }
+  .secret-letter p:first-of-type {
+    font-weight: 600;
+    font-size: 1.1em;
+    color: #5A4A3A;
+  }
+  .secret-letter p[align="right"] {
+    margin-top: 12px;
+    color: #8A7060;
+    font-style: italic;
   }
   .secret-letter::-webkit-scrollbar { width: 4px; }
   .secret-letter::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,0.15); border-radius: 4px;
+    background: rgba(180,160,140,0.25); border-radius: 4px;
   }
   .letter-close {
     position: absolute;
@@ -310,6 +365,9 @@
 <!-- Stars -->
 <div class="stars" id="stars"></div>
 
+<!-- Floating Decorations -->
+<div class="float-decor" id="floatDecor"></div>
+
 <!-- Balloons -->
 <div class="balloons" id="balloons"></div>
 
@@ -338,10 +396,15 @@
     <button class="letter-close" id="letterClose" aria-label="关闭">✖</button>
     <p>致 小任：</p>
     <br>
-    <p>其实除了前面的短祝福，还有些话想偷偷放在这里。</p>
-    <p>前几天五一大家一起去苏州玩得真的很开心。无论是去打卡东方之门，还是在金鸡湖畔闲逛，能有你这样合拍的朋友一起旅行、分享生活，是一件非常幸运的事情。</p>
+    <p>从高一第一次遇见我们已经做了将近四年的好朋友啦，</p>
+    <p>四年前认识你，就觉得你像一束小太阳</p>
+    <p>四年过去，虽然我们去到了不同的地方上学，<p>
+    <p>各自来到了更广阔的天地，但你依旧是那个真诚、热烈、善良的小任<p>
     <br>
-    <p>新的一岁，愿你在学业和生活上都能闪闪发光，做最快乐的自己！</p>
+    <p>19岁的你拥有无限的可能，青春也永远是我们最大的资本，<p>
+    <p>无论你飞向哪里，愿时光永远善待小任，也祝愿你能继续舒展的去拥抱世界！<p>
+    <p>最后，小任不是小人，是最真诚善良的小任！<p>
+    <p>十九岁生日快乐哇！<p> 
     <p align="right">—— 小宋</p>
   </div>
 </div>
@@ -360,6 +423,22 @@
     star.style.width = (2 + Math.random() * 4) + 'px';
     star.style.height = star.style.width;
     starsContainer.appendChild(star);
+  }
+
+  // ==================== Floating Decorations ====================
+  const floatDecor = document.getElementById('floatDecor');
+  const heartEmojis = ['💕', '🩷', '✨', '💖', '💗', '🌟', '💝', '🪩'];
+  for (let i = 0; i < 16; i++) {
+    const el = document.createElement('span');
+    el.className = Math.random() > 0.5 ? 'float-heart' : 'float-sparkle';
+    el.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+    el.style.left = Math.random() * 94 + '%';
+    el.style.setProperty('--dur', (10 + Math.random() * 16) + 's');
+    el.style.setProperty('--delay', (Math.random() * 14) + 's');
+    el.style.setProperty('--size', (14 + Math.random() * 22) + 'px');
+    el.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+    el.style.setProperty('--spin', (Math.random() * 360 - 180) + 'deg');
+    floatDecor.appendChild(el);
   }
 
   // ==================== Balloons ====================
@@ -701,6 +780,11 @@
     const overlay = document.getElementById('letter-overlay');
     const letter = document.getElementById('secretLetter');
     overlay.classList.add('visible');
+
+    // Sparkle burst around center when letter opens
+    spawnFireworks(window.innerWidth / 2, window.innerHeight / 2);
+    spawnConfetti(window.innerWidth / 2, window.innerHeight / 2, 60);
+
     // Trigger slide-up after a frame for the transition to work
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
