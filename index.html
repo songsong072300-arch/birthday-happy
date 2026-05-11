@@ -224,6 +224,79 @@
     pointer-events: none;
   }
 
+  /* ===== Secret Letter Overlay ===== */
+  #letter-overlay {
+    position: fixed; inset: 0;
+    z-index: 100;
+    background: rgba(60, 40, 50, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  #letter-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .secret-letter {
+    position: relative;
+    max-width: 520px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: #FDF8F0;
+    color: #4A3F3A;
+    border-radius: 12px;
+    padding: 36px 32px 32px;
+    box-shadow:
+      0 4px 6px rgba(0,0,0,0.07),
+      0 12px 40px rgba(0,0,0,0.18),
+      inset 0 0 0 1px rgba(255,255,255,0.6);
+    font-family: 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+    font-size: clamp(15px, 2.2vw, 17px);
+    line-height: 2;
+    transform: translateY(30px);
+    opacity: 0;
+    transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1),
+                opacity 0.55s ease;
+  }
+  .secret-letter.revealed {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .secret-letter p {
+    margin: 0 0 2px;
+  }
+  .secret-letter::-webkit-scrollbar { width: 4px; }
+  .secret-letter::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15); border-radius: 4px;
+  }
+  .letter-close {
+    position: absolute;
+    top: 12px; right: 14px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.06);
+    color: #8A7A70;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    z-index: 2;
+    line-height: 1;
+  }
+  .letter-close:hover {
+    background: rgba(0,0,0,0.12);
+    color: #4A3F3A;
+  }
+
   /* ===== Responsive ===== */
   @media (max-width: 480px) {
     .card { padding: 28px 24px; border-radius: 20px; }
@@ -580,7 +653,10 @@
     }
   });
 
-  // Cake click: fireworks + extra confetti
+  // Cake click: fireworks + 3-click easter egg
+  let cakeClickCount = 0;
+  let cakeClickTimer = null;
+
   document.getElementById('cake').addEventListener('click', function(e) {
     e.stopPropagation();
     const rect = this.getBoundingClientRect();
@@ -593,11 +669,53 @@
     setTimeout(() => {
       spawnConfetti(cx + (Math.random() - 0.5) * 80, cy + (Math.random() - 0.5) * 40, 20);
     }, 300);
+
+    // 3-click easter egg within 2 seconds
+    cakeClickCount++;
+    if (cakeClickCount === 1) {
+      cakeClickTimer = setTimeout(() => { cakeClickCount = 0; }, 2000);
+    }
+    if (cakeClickCount >= 3) {
+      clearTimeout(cakeClickTimer);
+      cakeClickCount = 0;
+      showLetter();
+    }
+  });
+
+  // ==================== Secret Letter ====================
+  function showLetter() {
+    const overlay = document.getElementById('letter-overlay');
+    const letter = document.getElementById('secretLetter');
+    overlay.classList.add('visible');
+    // Trigger slide-up after a frame for the transition to work
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        letter.classList.add('revealed');
+      });
+    });
+  }
+
+  function hideLetter() {
+    const overlay = document.getElementById('letter-overlay');
+    const letter = document.getElementById('secretLetter');
+    letter.classList.remove('revealed');
+    setTimeout(() => {
+      overlay.classList.remove('visible');
+    }, 400);
+  }
+
+  document.getElementById('letterClose').addEventListener('click', function(e) {
+    e.stopPropagation();
+    hideLetter();
+  });
+
+  document.getElementById('letter-overlay').addEventListener('click', function(e) {
+    if (e.target === this) hideLetter();
   });
 
   // Touch events for mobile
   document.addEventListener('touchstart', function(e) {
-    if (e.target.closest('#musicBtn') || e.target.closest('#cake') || e.target.closest('#giftWrapper')) return;
+    if (e.target.closest('#musicBtn') || e.target.closest('#cake') || e.target.closest('#giftWrapper') || e.target.closest('#letter-overlay')) return;
     const touch = e.touches[0];
     spawnConfetti(touch.clientX, touch.clientY, 25);
     if (!audioCtx) startMusic();
@@ -605,5 +723,19 @@
 
 })();
 </script>
+<!-- Secret Letter Overlay -->
+<div id="letter-overlay">
+  <div class="secret-letter" id="secretLetter">
+    <button class="letter-close" id="letterClose" aria-label="关闭">✖</button>
+    <p>致 小任：</p>
+    <br>
+    <p>其实除了前面的短祝福，还有些话想偷偷放在这里。</p>
+    <p>前几天五一大家一起去苏州玩得真的很开心。无论是去打卡东方之门，还是在金鸡湖畔闲逛，能有你这样合拍的朋友一起旅行、分享生活，是一件非常幸运的事情。</p>
+    <br>
+    <p>新的一岁，愿你在学业和生活上都能闪闪发光，做最快乐的自己！</p>
+    <p align="right">—— 小宋</p>
+  </div>
+</div>
+
 </body>
 </html>
