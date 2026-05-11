@@ -145,12 +145,26 @@
     0%   { opacity: 0; transform: translate(-50%, calc(-50% + 40px)); }
     100% { opacity: 1; transform: translate(-50%, -50%); }
   }
-  .card h1 {
-    font-size: clamp(24px, 5vw, 42px);
+  .card .typewriter {
+    font-size: clamp(20px, 4vw, 32px);
     color: #E75480;
-    margin-bottom: 8px;
-    line-height: 1.4;
+    line-height: 1.8;
+    text-align: left;
+    display: inline-block;
     text-shadow: 0 2px 4px rgba(255, 105, 180, 0.15);
+    white-space: pre-wrap;
+    min-height: 1em;
+  }
+  .cursor {
+    display: inline;
+    font-size: clamp(20px, 4vw, 32px);
+    color: #E75480;
+    font-weight: bold;
+    animation: cursor-blink 0.7s step-end infinite;
+  }
+  @keyframes cursor-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
   }
   .card .cake-emoji {
     font-size: clamp(48px, 10vw, 80px);
@@ -159,17 +173,23 @@
     animation: bounce 1s ease-in-out infinite;
     cursor: pointer;
     pointer-events: auto;
-    transition: transform 0.15s;
+    transition: opacity 0.8s ease, transform 0.15s;
   }
   .card .cake-emoji:active { transform: scale(1.15); }
   @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
   }
+  .card .cake-emoji.hidden,
+  .card .signature.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
   .card .signature {
     font-size: clamp(16px, 3vw, 22px);
     color: #C97586;
     margin-top: 4px;
+    transition: opacity 0.8s ease;
   }
 
   /* ===== Music Button ===== */
@@ -234,9 +254,9 @@
 
 <!-- Birthday Card -->
 <div class="card" id="card">
-  <h1>小任，生日快乐！</h1>
-  <span class="cake-emoji" id="cake">🎂</span>
-  <p class="signature">—— 小宋</p>
+  <div class="typewriter" id="typewriter"></div><span class="cursor" id="cursor">|</span>
+  <span class="cake-emoji hidden" id="cake">🎂</span>
+  <p class="signature hidden" id="signature">—— 小宋</p>
 </div>
 
 <script>
@@ -428,7 +448,7 @@
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
 
-    osc.type = 'triangle';
+    osc.type = 'sine';
     osc.frequency.setValueAtTime(notes[note], startTime);
 
     gain.gain.setValueAtTime(0, startTime);
@@ -510,8 +530,43 @@
     // Reveal card after gift fades out (0.6s) + 0.5s delay
     setTimeout(() => {
       document.getElementById('card').classList.add('revealed');
+      // Start typewriter after card reveal animation completes (1s)
+      setTimeout(() => startTypewriter(), 1050);
     }, 1100);
   });
+
+  // ==================== Typewriter ====================
+  const typewriterText = '致 小任：\n生日快乐！\n愿你新的一岁，\n眼里有光，心中有海，\n平安喜乐，万事顺意。';
+  let typewriterIndex = 0;
+  let typewriterDone = false;
+
+  function startTypewriter() {
+    const el = document.getElementById('typewriter');
+    const cursor = document.getElementById('cursor');
+    typewriterIndex = 0;
+    typewriterDone = false;
+    el.textContent = '';
+    cursor.style.display = 'inline';
+
+    function type() {
+      if (typewriterIndex < typewriterText.length) {
+        el.textContent += typewriterText[typewriterIndex];
+        typewriterIndex++;
+        const delay = 60 + Math.random() * 80;
+        setTimeout(type, delay);
+      } else {
+        // Typing complete: hide cursor, reveal cake and signature
+        typewriterDone = true;
+        cursor.style.display = 'none';
+        const cake = document.getElementById('cake');
+        const sig = document.getElementById('signature');
+        cake.classList.remove('hidden');
+        sig.classList.remove('hidden');
+      }
+    }
+
+    type();
+  }
 
   // ==================== Event Handlers ====================
   document.getElementById('musicBtn').addEventListener('click', toggleMusic);
